@@ -13,6 +13,7 @@
   const mouse = computed(() => mouseMap[emotion.value])
 
   // まばたき
+  const BLINKABLE_EMOTIONS = ['neutral', 'thinking']
   const blink = createBlinkController({
     getEmotion: () => emotion.value,
     onEyeChange: (state) => {
@@ -24,10 +25,29 @@
 
   onBeforeUnmount(() => blink.stop())
 
-  watch(emotion, (val) => {
-    if (isBlink.isBlinking()) return
-    eyeState.value = val
+  watch(loading, (val) => {
+    if (val) {
+      blink.pause()
+    } else {
+      if (BLINKABLE_EMOTIONS.includes(emotion.value)) {
+        blink.resume()
+      }
+    }
   })
+
+  watch(emotion, (val) => {
+    console.log('表情が変化:',val)
+    // 表情が変わった瞬間は一旦止める
+    blink.pause()
+    eyeState.value = val
+
+    if (BLINKABLE_EMOTIONS.includes(val)) {
+      setTimeout(() => {
+        blink.resume()
+      }, 600)
+    }
+  })
+                    
 
   // CloudFlareWorkers経由でOpenApiを叩く
   // 個人で契約しているのでキーはサーバー側で管理！秘密
