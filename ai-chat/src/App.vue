@@ -111,7 +111,8 @@
         ref="inputRef"
         v-model="input"
         class="input"
-        placeholder="メッセージを入力"
+        placeholder="メッセージを入力してください"
+        :disabled="loading"
         rows="3"
         @keydown.enter.prevent="handlePostMessage"
         @keydown.shift.enter.stop
@@ -120,7 +121,7 @@
         :disabled="loading || !input.length"
         @click="handlePostMessage"
       >
-        {{ loading ? '考え中...' : '送信' }}
+        {{ loading ? '送信中' : '送信' }}
       </button>
     </div>
   </main>
@@ -183,6 +184,19 @@
   position: relative;   /* absolute の基準 */
   width: 100%;
   aspect-ratio: 3/5;
+  animation: float 4.5s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+  100% {
+    transform: translateY(0);
+  }
 }
 
 /* 全レイヤー共通 */
@@ -201,18 +215,41 @@
   display: flex;
   gap: 8px;
   padding: 1rem;
-  background-color: #8CA9FF;
+  background-color: transparent;
   z-index: 10;
   box-sizing: border-box;
 
-  .input {
-    flex: 1;
-    resize: none;
-    font-size:1rem;
+}
 
-    .send:disabled {
-      opacity: 0.5;
-    }
-  }
+.input {
+  flex: 1;
+  resize: none;
+  border-radius: 8px;
+  padding: 10px ;
+  font-size:1rem;
+  outline: none;
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+}
+
+.input:focus {
+  border-color: rgba(0, 0, 0, 0.35);
+}
+
+.input:disabled {
+  border-color: rgba(0, 0, 0, 0.25);
+  opacity: 0.8;
+}
+
+
+.ui button {
+  background: white;
+  border: 1px solid rgba(0,0,0,0.2);
+  border-radius: 10px;
+  padding: 0 12px;
+}
+
+.ui button:disabled {
+  opacity: 0.8;
 }
 </style>
