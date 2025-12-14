@@ -1,7 +1,27 @@
 export default {
   async fetch(request, env) {
+
+    // ★CloudFlareWorkerとの連携チェック
+    // リクエストを送る前にサーバ側に御用聞きをする(CORSチェック)
+    // ブラウザ「POSTメソッド送ってもよいですか？？」
+    if (request.method === "OPTIONS") {
+      return new Response(null, {
+        headers: {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "POST, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type",
+        },
+      })
+    }
+
+    // サーバー「POST送られるのは無理・・・」→失敗！
+    if (request.method !== "POST") {
+      return new Response("Method Not Allowed", { status: 405 })
+    }
+
     const body = await request.json()
 
+    // ★OPENAIとの連携
     // TODO:
     // Chat Completions API は将来 deprecated 予定。
     // 新規実装は Responses API 推奨。
@@ -45,11 +65,26 @@ export default {
     //   }
     // }
 
+    // 保険：openAIとの通信に失敗したら500エラー
+    if (!res.ok) {
+      const error = await res.text()
+      return new Response(
+        JSON.stringify({ error }),
+        {
+          status: 500,
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+          },
+        }
+      )
+    }
+
     const data = await res.json()
 
     const text = data.choices?.[0]?.message?.content ?? ""
 
-    // stromg形に直してJSにレスポンスを返す
+    // string形に直してJSにレスポンスを返す
     return new Response(
       JSON.stringify({ text }),
       {
