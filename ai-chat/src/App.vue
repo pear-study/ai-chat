@@ -1,15 +1,33 @@
 <script setup>
-  import { ref, computed } from 'vue'
-  import { eyeMap, mouseMap, detectEmotion } from './logic/emotion'
+  import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
+  import { eyeMap, mouseMap, detectEmotion, createBlinkController } from './logic/emotion'
   
   const emotion = ref('neutral')
+  const eyeState = ref('neutral')
+
   const message = ref('こんにちは')
   const input = ref('')
   const loading = ref(false)
 
-  const eye = computed(() => eyeMap[emotion.value])
+  const eye = computed(() => eyeMap[eyeState.value])
   const mouse = computed(() => mouseMap[emotion.value])
 
+  // まばたき
+  const blink = createBlinkController({
+    getEmotion: () => emotion.value,
+    onEyeChange: (state) => {
+      eyeState.value =state
+    },
+  })
+
+  onMounted(blink.start())
+
+  onBeforeUnmount(() => blink.stop())
+
+  watch(emotion, (val) => {
+    if (isBlink.isBlinking()) return
+    eyeState.value = val
+  })
 
   // CloudFlareWorkers経由でOpenApiを叩く
   // 個人で契約しているのでキーはサーバー側で管理！秘密
