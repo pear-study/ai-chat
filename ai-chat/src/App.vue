@@ -1,11 +1,14 @@
 <script setup>
-  import { ref } from 'vue'
-
-  const eye = ref('/eye-1.png')
-  const mouse = ref('/mouse-1.png')
+  import { ref, computed } from 'vue'
+  import { eyeMap, mouseMap, detectEmotion } from './logic/emotion'
+  
+  const emotion = ref('neutral')
   const message = ref('こんにちは')
   const input = ref('')
   const loading = ref(false)
+
+  const eye = computed(() => eyeMap[emotion.value])
+  const mouse = computed(() => mouseMap[emotion.value])
 
 
   // CloudFlareWorkers経由でOpenApiを叩く
@@ -14,8 +17,8 @@
     if (!input.value) return
 
     loading.value = true
+    emotion.value = 'thinking'
     message.value = '...'
-    mouse.value = '/mouse-2.png'
 
     try {
       const res = await fetch('https://ai-chat.ffvkbzmm49.workers.dev', {
@@ -29,10 +32,11 @@
       // 返却されたメッセージを表示する
       const data = await res.json()
       message.value = data.text
+      emotion.value = detectEmotion(data.text)
     } catch {
       message.value = 'ごめんね、もう一回お話してくれる？'
+      emotion.value = 'sad'
     } finally {
-      mouse.value = '/mouse-1.png'
       loading.value = false
       input.value = ''
     }
