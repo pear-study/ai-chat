@@ -1,5 +1,5 @@
 {
-  "name": "ai-chat-worker",
+  "name": "ai-chat",
   "main": "ai-chat/src/index.js",
   "compatibility_date": "2025-12-14"
 }
