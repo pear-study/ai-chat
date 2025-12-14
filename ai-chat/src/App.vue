@@ -107,5 +107,7 @@
 /* UI */
 .ui {
   padding: 1rem;
+  position: relative;
+  z-index: 10;
 }
 </style>
