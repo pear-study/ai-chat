@@ -2,6 +2,10 @@ export default {
   async fetch(request, env) {
     const body = await request.json()
 
+    // TODO:
+    // Chat Completions API は将来 deprecated 予定。
+    // 新規実装は Responses API 推奨。
+    // ただし 2025-12 時点ではこちらが最も安定。
     const res = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -14,15 +18,40 @@ export default {
       }),
     })
 
-    const text = await res.text()
+    // OpenAI Chat Completions のレスポンス形式
+    // チェック方法：curl -X POST https://ai-chat.ffvkbzmm49.workers.dev -H "Content-Type: application/json" -d "{\"messages\":[{\"role\":\"user\",\"content\":\"テスト\"}]}"
+    // data = {
+    //   id: string,
+    //   object: "chat.completion",
+    //   created: number,
+    //   model: string,
+    //   choices: [
+    //     {
+    //       index: number,
+    //       message: {
+    //         role: "assistant",
+    //         content: string,   // ← ここを使う
+    //         refusal: null,
+    //         annotations: []
+    //       },
+    //       logprobs: null,
+    //       finish_reason: "stop"
+    //     }
+    //   ],
+    //   usage: {
+    //     prompt_tokens: number,
+    //     completion_tokens: number,
+    //     total_tokens: number
+    //   }
+    // }
 
-    // ステータスも含めて全部返す
+    const data = await res.json()
+
+    const text = data.choices?.[0]?.message?.content ?? ""
+
+    // stromg形に直してJSにレスポンスを返す
     return new Response(
-      JSON.stringify({
-        status: res.status,
-        headers: Object.fromEntries(res.headers),
-        raw: text,
-      }),
+      JSON.stringify({ text }),
       {
         headers: {
           "Content-Type": "application/json",
