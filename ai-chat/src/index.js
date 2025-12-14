@@ -2,28 +2,27 @@ export default {
   async fetch(request, env) {
     const body = await request.json()
 
-    const res = await fetch("https://api.openai.com/v1/responses", {
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "gpt-4o-mini",
-        // 👇 ここが超重要 明示的に
-        input: body.messages.map(m => m.content).join("\n"),
-        // 👇 これを明示
-        response_format: { type: "text" }
-      })
+        model: "gpt-3.5-turbo",
+        messages: body.messages,
+      }),
     })
 
-    const data = await res.json()
+    const text = await res.text()
 
-    // 👇 これが一番安定する取り方
-    const text = data.output_text ?? ""
-
+    // ステータスも含めて全部返す
     return new Response(
-      JSON.stringify({ text }),
+      JSON.stringify({
+        status: res.status,
+        headers: Object.fromEntries(res.headers),
+        raw: text,
+      }),
       {
         headers: {
           "Content-Type": "application/json",
