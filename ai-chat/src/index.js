@@ -10,19 +10,17 @@ export default {
       },
       body: JSON.stringify({
         model: "gpt-4o-mini",
-        input: body.messages.map(m => ({
-          role: m.role,
-          content: [{ type: "text", text: m.content }]
-        }))
+        // 👇 ここが超重要 明示的に
+        input: body.messages.map(m => m.content).join("\n"),
+        // 👇 これを明示
+        response_format: { type: "text" }
       })
     })
 
     const data = await res.json()
 
-    // 👇 Responses API の正しい取り方
-    const text =
-      data.output?.[0]?.content?.find(c => c.type === "output_text")?.text
-      ?? ""
+    // 👇 これが一番安定する取り方
+    const text = data.output_text ?? ""
 
     return new Response(
       JSON.stringify({ text }),
