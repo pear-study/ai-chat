@@ -6,8 +6,11 @@
   const eyeState = ref('neutral')
 
   const message = ref('こんにちは')
-  const input = ref('')
   const loading = ref(false)
+
+  // ユーザーの入力値
+  const input = ref('')
+  const inputRef = ref(null)
 
   const eye = computed(() => eyeMap[eyeState.value])
   const mouse = computed(() => mouseMap[emotion.value])
@@ -77,6 +80,7 @@
     } finally {
       loading.value = false
       input.value = ''
+      inputRef.value?.focus()
     }
   }
 
@@ -104,17 +108,19 @@
 
     <div class="ui">
       <textarea
+        ref="inputRef"
         v-model="input"
         class="input"
         placeholder="メッセージを入力"
         rows="3"
+        @keydown.enter.prevent="handlePostMessage"
+        @keydown.shift.enter.stop
       />
       <button
-        class="send"
-        :disabled="loading"
+        :disabled="loading || !input.length"
         @click="handlePostMessage"
       >
-        送信
+        {{ loading ? '考え中...' : '送信' }}
       </button>
     </div>
   </main>
