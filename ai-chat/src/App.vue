@@ -4,6 +4,24 @@
   const eye = ref('/eye-1.png')
   const mouse = ref('/mouse-1.png')
   const message = ref('こんにちは')
+  const input = ref('')
+
+  // CloudFlareWorkers経由でOpenApiを叩く
+  // 個人で契約しているのでキーはサーバー側で管理！秘密
+  async function handlePostMessage() {
+    const res = await fetch('https://ai-chat.ffvkbzmm49.workers.dev', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [{ role: 'user', content: input.value }]
+      })
+    })
+
+    // 返却されたメッセージを表示する
+    const data = await res.json()
+    message.value = data.text
+  }
+
 
 </script>
 
@@ -22,11 +40,12 @@
 
     <div class="ui">
       <textarea
+        v-model="input"
         class="input"
         placeholder="メッセージを入力"
         rows="3"
       />
-      <button class="send">送信</button>
+      <button class="send" @click="handlePostMessage">送信</button>
     </div>
   </main>
 </template>
