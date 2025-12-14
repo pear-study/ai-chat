@@ -20,10 +20,16 @@ export default {
 
     const data = await res.json()
 
-    // 👇 デバッグ用：丸ごと返す
     return new Response(
-      JSON.stringify(data),
-      { headers: { 'Content-Type': 'application/json' } }
+      JSON.stringify({
+        text: data.choices?.[0]?.message?.content ?? '',
+      }),
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
+      }
     )
   }
 }
