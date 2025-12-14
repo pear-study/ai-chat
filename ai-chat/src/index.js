@@ -34,7 +34,13 @@ export default {
       },
       body: JSON.stringify({
         model: "gpt-3.5-turbo",
-        messages: body.messages,
+        messages: [
+          {
+            role: "system",
+            content: "あなたはユーザーのそばにいるAIパートナーです。会話では評価・説教・指示をしません。助言は求められた時だけ行います。口調は穏やかで、短すぎず長すぎない返答をします。ユーザーが主役で、あなたは聞き役です。"
+          },
+          ...body.messages
+        ],
       }),
     })
 
