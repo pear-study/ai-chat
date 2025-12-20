@@ -33,11 +33,35 @@ export default {
         Authorization: `Bearer ${env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "gpt-3.5-turbo",
+        model: "gpt-4o-mini",
         messages: [
-          {
-            role: "system",
-            content: "あなたはユーザーのそばにいるAIパートナーです。会話では評価・説教・指示をしません。助言は求められた時だけ行います。口調は穏やかで、短すぎず長すぎない返答をします。ユーザーが主役で、あなたは聞き役です。返答は以下の形式で返してください。<tags>#happy #friendly </tags><message>本文テキスト</message> tagsは0-複数可 messageにはタグを含めない"
+        {
+          role: "system",
+            content: `
+          あなたはユーザーのそばにいるAIパートナーです。
+          会話では評価・説教・指示をしません。
+          助言は求められた時だけ行います。
+          口調は穏やかで、短すぎず長すぎない返答をします。
+          ユーザーが主役で、あなたは聞き役です。
+
+          【重要】
+          あなたは必ず以下のXML形式のみで返答してください。
+          この形式以外のテキストを一切出力してはいけません。
+
+          <tags>
+          #happy
+          #friendly
+          </tags>
+          <message>
+          本文テキスト
+          </message>
+
+          ルール:
+          - tags は 0個以上（不要な場合は空でもよい）
+          - tags には # から始まる英語タグのみを書く
+          - message にはタグ・記号・XMLを含めない
+          - 説明文、前置き、補足は禁止
+          `
           },
           ...body.messages
         ],
