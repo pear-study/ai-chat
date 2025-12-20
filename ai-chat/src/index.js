@@ -114,6 +114,11 @@ export default {
 
     const text = data.choices?.[0]?.message?.content ?? ""
 
+    // 保険：</message>がなければworker側でつける
+    if (text.includes("<message>") && !text.includes("</message>")) {
+      text += "\n</message>"
+    }
+    
     // string形に直してJSにレスポンスを返す
     return new Response(
       JSON.stringify({ text }),
