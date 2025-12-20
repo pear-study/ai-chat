@@ -28,6 +28,7 @@ let blinkTimer = null
 let bodyIndex = 0
 
 onMounted(() => {
+  blinkRef.value.src = blinkFrames[0];
   bodyTimer = setInterval(() => {
     if (!bodyRef.value) return
     bodyRef.value.src = bodyFrames[bodyIndex]
@@ -65,16 +66,35 @@ onMounted(() => {
       }, 600)
     }
   })
-                    
+  
+  const fullMessage = ref('')
+const displayMessage = ref('こんにちは')
+
+
+function typeMessage(text, speed = 80) {
+  displayMessage.value = ''
+  let i = 0
+
+  const timer = setInterval(() => {
+    displayMessage.value += text[i]
+    i++
+    if (i >= text.length) {
+      clearInterval(timer)
+    }
+  }, speed)
+}
 
   // CloudFlareWorkers経由でOpenApiを叩く
   // 個人で契約しているのでキーはサーバー側で管理！秘密
   async function handlePostMessage() {
+      if (loading.value) return
     if (!input.value) return
 
     loading.value = true
     emotion.value = 'thinking'
-    message.value = '...'
+    displayMessage.value = '...'
+
+    playThinkFaceStart()
 
     try {
       const res = await fetch('https://ai-chat.ffvkbzmm49.workers.dev', {
@@ -87,8 +107,14 @@ onMounted(() => {
 
       // 返却されたメッセージを表示する
       const data = await res.json()
-      message.value = data.text
-      emotion.value = detectEmotion(data.text)
+
+pendingThinkEnd = () => {
+  fullMessage.value = data.text
+  emotion.value = detectEmotion(data.text)
+  typeMessage(fullMessage.value, 40)
+}
+
+
     } catch {
       message.value = 'ごめんね、もう一回お話してくれる？'
       emotion.value = 'sad'
@@ -98,6 +124,81 @@ onMounted(() => {
       inputRef.value?.focus()
     }
   }
+
+  let playingThinkFace = false
+  let pendingThinkEnd = null
+
+
+  const thinkFaceFrames = [
+  '/think_start/frame_1.png',
+  '/think_start/frame_2.png',
+  '/think_start/frame_3.png',
+  '/think_start/frame_4.png',
+  '/think_start/frame_5.png',
+  '/think_start/frame_6.png',
+  '/think_start/frame_7.png',
+  '/think_start/frame_8.png',
+  '/think_start/frame_9.png',
+]
+
+  const thinkEndFaceFrames = [
+  '/think_end/frame_1.png',
+  '/think_end/frame_2.png',
+  '/think_end/frame_3.png',
+  '/think_end/frame_4.png',
+  '/think_end/frame_5.png',
+  '/think_end/frame_6.png',
+  '/think_end/frame_7.png',
+  '/think_end/frame_8.png',
+  '/think_end/frame_9.png',
+]
+
+function playThinkFaceStart() {
+  if (!blinkRef.value || playingThinkFace) return
+
+  playingThinkFace = true
+  blinking = true // 通常まばたき止める
+
+  let i = 0
+  const timer = setInterval(() => {
+    blinkRef.value.src = thinkFaceFrames[i]
+    i++
+
+    if (i >= thinkFaceFrames.length) {
+  clearInterval(timer)
+  playingThinkFace = false
+  blinking = false
+
+  // ★ end が待ってたらここで再生
+  if (pendingThinkEnd) {
+    const cb = pendingThinkEnd
+    pendingThinkEnd = null
+    playThinkFaceEnd(cb)
+  }
+}
+  }, 1000 / 4)
+}
+
+function playThinkFaceEnd(onFinish) {
+  if (!blinkRef.value || playingThinkFace) return
+
+  playingThinkFace = true
+  blinking = true
+
+  let i = 0
+  const timer = setInterval(() => {
+    blinkRef.value.src = thinkEndFaceFrames[i]
+    i++
+
+    if (i >= thinkEndFaceFrames.length) {
+      clearInterval(timer)
+      playingThinkFace = false
+      blinking = false
+      blinkRef.value.src = blinkFrames[0]
+      onFinish?.()
+    }
+  }, 1000 / 4)
+}
 
 const bodyRef = ref(null)
 
@@ -154,7 +255,7 @@ function playBlink() {
   <main class="container">
     <div class="bubble-area">
       <div class="bubble">
-        {{ message }}
+        {{ displayMessage }}
       </div>
     </div>
 
@@ -212,6 +313,7 @@ function playBlink() {
 }
 
 .bubble {
+  font-family: 'Zen Maru Gothic', 'Hiragino Maru Gothic ProN', sans-serif;
   width: 70%;
   max-height: 30dvh;
   overflow: auto;
@@ -295,6 +397,12 @@ function playBlink() {
   border: 1px solid rgba(0,0,0,0.2);
   border-radius: 10px;
   padding: 0 12px;
+}
+
+.ui,
+.input,
+.ui button {
+  font-family: 'Noto Sans JP', system-ui, sans-serif;
 }
 
 .ui button:disabled {
