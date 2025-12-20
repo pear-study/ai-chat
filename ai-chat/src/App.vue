@@ -23,8 +23,23 @@
       eyeState.value =state
     },
   })
+let blinkTimer = null
+  let bodyTimer = null
+let bodyIndex = 0
 
-  onMounted(blink.start())
+onMounted(() => {
+  bodyTimer = setInterval(() => {
+    if (!bodyRef.value) return
+    bodyRef.value.src = bodyFrames[bodyIndex]
+    bodyIndex = (bodyIndex + 1) % bodyFrames.length
+  }, 1000 / 4)
+    blinkTimer = setInterval(() => {
+    // 表情が落ち着いてるときだけ
+    if (emotion.value === 'neutral' || emotion.value === 'thinking') {
+      playBlink()
+    }
+  }, 6000 + Math.random() * 4000)
+})
 
   onBeforeUnmount(() => blink.stop())
 
@@ -84,6 +99,54 @@
     }
   }
 
+const bodyRef = ref(null)
+
+const bodyFrames = [
+  '/body/frame_01.png',
+  '/body/frame_02.png',
+  '/body/frame_03.png',
+  '/body/frame_04.png',
+  '/body/frame_06.png',
+  '/body/frame_07.png',
+  '/body/frame_08.png',
+  '/body/frame_09.png',
+  '/body/frame_10.png',
+  '/body/frame_11.png',
+  '/body/frame_12.png',
+  '/body/frame_13.png',
+  '/body/frame_14.png',
+  '/body/frame_15.png',
+  '/body/frame_16.png',
+  '/body/frame_17.png',
+  '/body/frame_18.png',
+];
+
+const blinkRef = ref(null)
+
+const blinkFrames = [
+  '/blink/frame_1.png',
+  '/blink/frame_2.png',
+  '/blink/frame_3.png',
+  '/blink/frame_4.png',
+  '/blink/frame_5.png',
+]
+
+let blinking = false
+
+function playBlink() {
+  if (blinking || !blinkRef.value) return
+  blinking = true
+
+  let i = 0
+  const timer = setInterval(() => {
+    blinkRef.value.src = blinkFrames[i]
+    i++
+    if (i >= blinkFrames.length) {
+      clearInterval(timer)
+      blinking = false
+    }
+  }, 1000 / 4)
+}
 
 </script>
 
@@ -98,9 +161,8 @@
     <div class="character">
       <div class="character-inner">
         <div class="character-stack">
-          <img src="/body.png" class="layer body" />
-          <img :src="eye" class="layer eye" />
-          <img :src="mouse" class="layer mouse" />
+          <img ref="bodyRef" class="layer body" />
+          <img ref="blinkRef" class="layer blink" />
       </div>
     </div>                          
 
@@ -166,7 +228,6 @@
   position: absolute;
   inset: 0;
   width: 100%;
-  overflow-y: auto;
   overscroll-behavior: none;
 }
 
@@ -182,21 +243,8 @@
 
 .character-stack {
   position: relative;   /* absolute の基準 */
-  width: 100%;
+  width: 115%;
   aspect-ratio: 3/5;
-  animation: float 4.5s ease-in-out infinite;
-}
-
-@keyframes float {
-  0% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-3px);
-  }
-  100% {
-    transform: translateY(0);
-  }
 }
 
 /* 全レイヤー共通 */
